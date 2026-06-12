@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CI/CD Deployment Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="glow-bg"></div>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i data-lucide="zap"></i>
+        </div>
+        <h2>Red Hat CI/CD</h2>
+      </div>
+      <nav class="nav-links">
+        <a href="#" class="active"><i data-lucide="layout-dashboard"></i> Overview</a>
+        <a href="#" class="nav-item-disabled"><i data-lucide="server"></i> Server Health</a>
+        <a href="#" class="nav-item-disabled"><i data-lucide="git-branch"></i> Git Commits</a>
+        <a href="#" class="nav-item-disabled"><i data-lucide="settings"></i> Configurations</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-badge">
+          <div class="avatar">R</div>
+          <div class="user-info">
+            <span class="user-name">RHEL Host</span>
+            <span class="user-role">Docker Container</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="main-header">
+        <div>
+          <h1>Deployment Dashboard</h1>
+          <p class="subtitle">Live monitoring of your automated Red Hat pipeline</p>
+        </div>
+        <div class="badge status-live">
+          <span class="pulse-dot"></span>
+          <span>Pipeline Active</span>
+        </div>
+      </header>
+
+      <section class="grid-stats">
+        <div class="card stat-card">
+          <div class="card-header">
+            <span class="card-title">Deployment Target</span>
+            <div class="icon-wrapper redhat"><i data-lucide="terminal"></i></div>
+          </div>
+          <div class="stat-value">Red Hat</div>
+          <p class="stat-desc">Enterprise Linux (RHEL)</p>
+        </div>
+
+        <div class="card stat-card">
+          <div class="card-header">
+            <span class="card-title">Orchestration</span>
+            <div class="icon-wrapper docker"><i data-lucide="container"></i></div>
+          </div>
+          <div class="stat-value">Docker</div>
+          <p class="stat-desc">Engine & Compose</p>
+        </div>
+
+        <div class="card stat-card">
+          <div class="card-header">
+            <span class="card-title">System Status</span>
+            <div class="icon-wrapper active"><i data-lucide="check-circle-2"></i></div>
+          </div>
+          <div class="stat-value text-green">Healthy</div>
+          <p class="stat-desc" id="system-uptime">Fetching uptime...</p>
+        </div>
+      </section>
+
+      <section class="grid-details">
+        <div class="card details-card">
+          <h3>Environment Metadata</h3>
+          <div class="meta-list" id="meta-container">
+            <div class="meta-item loading">Loading system metadata...</div>
+          </div>
+        </div>
+
+        <div class="card details-card pipeline-status">
+          <h3>CI/CD Pipeline Flow</h3>
+          <div class="pipeline-flow">
+            <div class="step completed">
+              <div class="step-icon"><i data-lucide="git-commit"></i></div>
+              <div class="step-info">
+                <h4>Code Push</h4>
+                <p>Triggered on push to `main` branch</p>
+              </div>
+            </div>
+            <div class="step completed">
+              <div class="step-icon"><i data-lucide="shield-check"></i></div>
+              <div class="step-info">
+                <h4>GitHub Actions</h4>
+                <p>SSH authentication & commands</p>
+              </div>
+            </div>
+            <div class="step completed">
+              <div class="step-icon"><i data-lucide="refresh-cw"></i></div>
+              <div class="step-info">
+                <h4>Server Deploy</h4>
+                <p>Git pull & Docker Compose rebuild</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>&copy; 2026 Red Hat Auto-Deploy Pipeline Demo. Built with Express and Docker.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+
+    // Fetch and display dynamic API data
+    async function fetchSystemInfo() {
+      const metaContainer = document.getElementById('meta-container');
+      const systemUptime = document.getElementById('system-uptime');
+      try {
+        const response = await fetch('/api/info');
+        const data = await response.json();
+        
+        // Format uptime
+        const uptimeSeconds = data.uptime;
+        const hours = Math.floor(uptimeSeconds / 3600);
+        const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+        systemUptime.textContent = `Uptime: ${hours}h ${minutes}m`;
+
+        // Generate metadata items
+        metaContainer.innerHTML = `
+          <div class="meta-item">
+            <span class="label">Host Name</span>
+            <span class="val">${data.hostname}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Platform OS</span>
+            <span class="val">${data.platform} (${data.release})</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">App Version</span>
+            <span class="val version-badge">${data.version}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Last Deploy Timestamp</span>
+            <span class="val date">${new Date(data.timestamp).toLocaleString()}</span>
+          </div>
+          <div class="meta-item">
+            <span class="label">Container Status</span>
+            <span class="val status-indicator text-green">Online</span>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error fetching system info:', error);
+        metaContainer.innerHTML = `<div class="meta-item text-red">Failed to connect to backend API. Ensure Docker container is running properly.</div>`;
+        systemUptime.textContent = 'Offline';
+      }
+    }
+
+    // Run fetch on load
+    fetchSystemInfo();
+    // Poll every 10 seconds
+    setInterval(fetchSystemInfo, 10000);
+  </script>
+</body>
+</html>
