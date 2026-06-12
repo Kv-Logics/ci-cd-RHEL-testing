@@ -7,51 +7,18 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Runs directly on your Red Hat server via the self-hosted runner
+    runs-on: self-hosted
+    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Execute Remote SSH Commands to Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            # Exit on error
-            set -e
-
-            # Define deployment target directory (defaults to ~/ci-cd-demo if not specified)
-            DEPLOY_DIR="${{ secrets.DEPLOY_PATH || '~/ci-cd-demo' }}"
-            
-            echo "Deploying application to $DEPLOY_DIR..."
-
-            # Create directory if it doesn't exist
-            mkdir -p "$DEPLOY_DIR"
-            cd "$DEPLOY_DIR"
-
-            # Initialize git repo if not already initialized
-            if [ ! -d ".git" ]; then
-              echo "Initializing git repository..."
-              git init
-              git remote add origin https://github.com/${{ github.repository }}.git
-            fi
-
-            # Fetch the latest code from main
-            echo "Fetching latest changes..."
-            git fetch origin main
-            
-            # Reset local state to match origin main
-            echo "Updating local files..."
-            git reset --hard origin/main
-
-            # Build and launch containers
-            echo "Rebuilding and restarting Docker containers..."
-            docker compose down
-            docker compose up --build -d
-
-            # Verify running container
-            echo "Deployment successful! Current running containers:"
-            docker ps | grep rhel-ci-cd-demo
+      - name: Deploy application via Docker Compose
+        run: |
+          echo "Rebuilding and restarting Docker containers locally on RHEL..."
+          docker compose down
+          docker compose up --build -d
+          
+          echo "Current running containers:"
+          docker ps | grep rhel-ci-cd-demo
