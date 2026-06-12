@@ -19,6 +19,6 @@ jobs:
           echo "Rebuilding and restarting Docker containers locally on RHEL..."
           docker compose down
           docker compose up --build -d
-          
+          # Verify running container
           echo "Current running containers:"
-          docker ps | grep rhel-ci-cd-demo
+          docker ps --filter "name=rhel-ci-cd-demo"
