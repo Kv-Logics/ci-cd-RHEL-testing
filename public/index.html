@@ -47,9 +47,15 @@
           <h1>Deployment Dashboard</h1>
           <p class="subtitle">Live monitoring of your local & RHEL automated pipelines</p>
         </div>
-        <div class="badge status-live">
-          <span class="pulse-dot"></span>
-          <span>Pipeline Active</span>
+        <div class="header-actions" style="display: flex; align-items: center; gap: 16px;">
+          <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+            <i data-lucide="sun" class="sun-icon"></i>
+            <i data-lucide="moon" class="moon-icon"></i>
+          </button>
+          <div class="badge status-live">
+            <span class="pulse-dot"></span>
+            <span>Pipeline Active</span>
+          </div>
         </div>
       </header>
 
@@ -176,6 +182,23 @@
     fetchSystemInfo();
     // Poll every 10 seconds
     setInterval(fetchSystemInfo, 10000);
+
+    // Theme Toggle Handler
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme');
+
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-theme');
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      let theme = 'dark';
+      if (document.body.classList.contains('light-theme')) {
+        theme = 'light';
+      }
+      localStorage.setItem('theme', theme);
+    });
   </script>
 </body>
 </html>
