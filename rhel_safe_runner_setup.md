@@ -1,81 +1,62 @@
-# Minimal & Secure RHEL GitHub Runner Setup
+# RHEL GitHub Actions Runner Setup Guide
 
-This guide provides a 200% safe, clean, and minimal setup for running multiple isolated GitHub Action runners on a shared RHEL server using official, built-in features (no custom scripts, no `nohup` hacks).
-
----
-
-## 1. Safety Measures (First Things First)
-To keep the server secure:
-1. **Never run actions as root**: Run everything under a regular user account (e.g., `nitt-user`).
-2. **Path Isolation**: Keep the runner directory inside the user's home folder or `/opt/` with ownership restricted to that user.
+Use one of the two options below to run isolated runners for multiple projects under a non-root user (e.g., `nitt-user`).
 
 ---
 
-## 2. Download the Runner (Once in Root Space)
-Create a single root folder for the GitHub runner software:
-
+## Shared Initialization (Run Once)
+Download and extract the runner software in a single shared directory:
 ```bash
-# Create the directory
-mkdir -p ~/github-runner
-cd ~/github-runner
-
-# Download the official GitHub Runner package
-curl -o actions-runner-linux-x64-2.316.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.316.1/actions-runner-linux-x64-2.316.1.tar.gz
-
-# Extract it
-tar xzf ./actions-runner-linux-x64-2.316.1.tar.gz
+mkdir -p ~/github-runner && cd ~/github-runner
+curl -o actions-runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.316.1/actions-runner-linux-x64-2.316.1.tar.gz
+tar xzf ./actions-runner.tar.gz
 ```
 
----
-
-## 3. How to Manage Projects (Separate Keys)
-To support multiple projects safely, create empty directories inside your runner root to hold each project's unique configuration keys:
-
+Create folders to hold config keys for each project (e.g., Project A and Project B):
 ```bash
-# Create folders for Project A and Project B
 mkdir -p ~/github-runner/project-a
 mkdir -p ~/github-runner/project-b
 ```
 
 ---
 
-## 4. First-Time Project Configuration (Setting the Token)
-To link a project, navigate to its folder and run the configuration script pointing back to the root folder:
+## Option A: The System Service Way (Requires Sudo/Admin Access)
+*Best for production. Automatically starts when the server reboots.*
 
-```bash
-# 1. Move to Project A folder
-cd ~/github-runner/project-a
-
-# 2. Run config pointing to the root runner setup
-../config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_GITHUB_TOKEN
-```
-*This safely saves the `.runner` configuration keys only inside `project-a`.*
-
----
-
-## 5. Starting and Stopping Safely (The Standard Service Way)
-Rather than using active terminals or complex background commands, use the official built-in service manager (`systemd`). This is clean, safe, and restarts automatically if the server reboots.
-
-Run these commands from inside the project directory:
-
-### To Install the Service:
+### 1. First-Time Setup
+Link the repository and install the service:
 ```bash
 cd ~/github-runner/project-a
+../config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_TOKEN
 sudo ./svc.sh install
 ```
 
-### To Start:
+### 2. Everyday Control Commands
 ```bash
+# Start the runner
 sudo ./svc.sh start
-```
 
-### To Stop:
-```bash
+# Stop the runner
 sudo ./svc.sh stop
 ```
 
-### To Uninstall the Service:
+---
+
+## Option B: The Background Way (No Sudo/Admin Access Required)
+*Use if you do not have admin permissions on the server.*
+
+### 1. First-Time Setup
+Link the repository:
 ```bash
-sudo ./svc.sh uninstall
+cd ~/github-runner/project-a
+../config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_TOKEN
 ```
-*(Repeat the same steps inside `~/github-runner/project-b` to configure and manage Project B separately.)*
+
+### 2. Everyday Control Commands
+```bash
+# Start the runner in the background
+nohup ../run.sh &
+
+# Stop the runner
+pkill -f "project-a"
+```
