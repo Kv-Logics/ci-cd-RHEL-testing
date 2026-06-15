@@ -14,7 +14,7 @@ This guide shows how to set up automatic deployment for your website.
 ## 📂 Folder Structure (Inside RHEL Server)
 
 ```text
-/var/www/domain-x/                    # Your domain space
+/var/www/[YOUR_DOMAIN]/               # Your domain space
 ├── .env                              # You upload this file (contains passwords/secrets)
 ├── github-runner/                    # Folder for connection keys
 └── [YOUR_PROJECT_NAME]/              # Folder where your code goes automatically
@@ -44,18 +44,18 @@ sudo chown -R $USER:$USER /opt/github-runner-base
 
 #### 1. Setup Keys (Run once per project):
 ```bash
-cd /var/www/domain-x/github-runner
+cd /var/www/[YOUR_DOMAIN]/github-runner
 /opt/github-runner-base/bin/config.sh --url https://github.com/Kv-Logics/geofence-engine --token GITHUB_RUNNER_TOKEN --work ../[YOUR_PROJECT_NAME]
 ```
 
 #### 2. Turn ON (Start Deployment):
-*Establishes a connection from GitHub to domain-x and pulls code.*
+*Establishes a connection from GitHub to [YOUR_DOMAIN] and pulls code.*
 ```bash
-cd /var/www/domain-x/github-runner
+cd /var/www/[YOUR_DOMAIN]/github-runner
 nohup /opt/github-runner-base/bin/run.sh &
 ```
 
 #### 3. Turn OFF (Stop Deployment):
 ```bash
-pkill -f "domain-x/github-runner"
+pkill -f "[YOUR_DOMAIN]/github-runner"
 ```
