@@ -17,7 +17,7 @@ This guide shows how to set up automatic deployment for your website.
 /var/www/domain-x/                    # Your domain space
 ├── .env                              # You upload this file (contains passwords/secrets)
 ├── github-runner/                    # Folder for connection keys
-└── project-a/                        # Folder where your code goes automatically
+└── [YOUR_PROJECT_NAME]/              # Folder where your code goes automatically
 ```
 
 ---
@@ -45,7 +45,7 @@ sudo chown -R $USER:$USER /opt/github-runner-base
 #### 1. Setup Keys (Run once per project):
 ```bash
 cd /var/www/domain-x/github-runner
-/opt/github-runner-base/bin/config.sh --url https://github.com/Kv-Logics/geofence-engine --token GITHUB_RUNNER_TOKEN --work ../project-a
+/opt/github-runner-base/bin/config.sh --url https://github.com/Kv-Logics/geofence-engine --token GITHUB_RUNNER_TOKEN --work ../[YOUR_PROJECT_NAME]
 ```
 
 #### 2. Turn ON (Start Deployment):
