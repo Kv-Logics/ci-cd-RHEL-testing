@@ -59,3 +59,17 @@ nohup /opt/github-runner-base/bin/run.sh &
 ```bash
 pkill -f "[YOUR_DOMAIN]/github-runner"
 ```
+
+---
+
+## 🚀 How the Deployment Works (Behind the Scenes)
+
+1. **You Push Code**: The Developer makes updates locally (such as backend fixes or UI changes) and pushes the commits to GitHub.
+2. **GitHub Action Workflow Runs**: Because the runner is **ON**, the server instantly picks up the push event. The runner downloads your repository files directly to the `/var/www/[YOUR_DOMAIN]/[YOUR_PROJECT_NAME]/` directory.
+3. **Automatic Docker Execution**: Inside the repository, a deployment workflow config file (located at `.github/workflows/deploy.yml`) tells the runner to execute the Docker commands:
+   ```bash
+   docker compose down
+   docker compose up --build -d
+   ```
+   *No one has to log into the server or type commands to start Docker. The workflow triggers Docker automatically using the `docker-compose.yml` you pushed. It reads your database keys from the safe `/var/www/[YOUR_DOMAIN]/.env` file and boots the React/Node/PostgreSQL containers instantly.*
+
