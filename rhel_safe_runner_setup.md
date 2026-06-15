@@ -7,7 +7,7 @@ This guide shows how to set up automatic deployment for your website.
 ## 👥 Roles (Who does what?)
 
 * **Developer**: Pushes their project files to Git. The server gets it automatically.
-* **Admin**: Sets up the keys once, and turns the system ON or OFF when requested.
+* **Admin**: Sets up the keys once, and turns the CI/CD runner ON or OFF when requested.
 
 ---
 
