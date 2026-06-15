@@ -1,47 +1,85 @@
-# Domain-Isolated GitHub Actions Runner Setup Guide
+# Optimized RHEL GitHub Runner Setup (Multi-Hosting & Full-Stack Docker)
 
-This guide describes how to configure independent, self-contained GitHub Actions runners inside individual domain spaces (e.g., `/var/www/domain-x/`). This allows files to deploy directly to the correct domain space while keeping setups isolated.
+This setup uses **only one base runner installation** (saving 100+ GB of server space) while deploying full-stack React/Node/PostgreSQL Docker applications into isolated domain folders.
 
 ---
 
-## Step 1: Download & Extract Runner (Do inside the Domain Folder)
-The server admin navigates to the domain's allocated space, creates a runner directory, and extracts the runner software:
+## 1. Directory Structure
 
+```text
+/opt/github-runner-base/
+├── bin/                          # ONE shared installation of runner binaries (~200MB)
+│   ├── config.sh
+│   ├── run.sh
+│   └── ...
+│
+├── project-a/                    # Keys for Project A (Uses ~10KB)
+│   ├── .runner                   # Instructs deployment to go to: /var/www/domain-x/
+│   └── .credentials
+│
+└── project-b/                    # Keys for Project B (Uses ~10KB)
+    ├── .runner                   # Instructs deployment to go to: /var/www/domain-y/
+    └── .credentials
+```
+
+---
+
+## 2. Server Installation (Run Once)
+Download and extract the shared runner binaries:
 ```bash
-# Go to the domain space
-cd /var/www/domain-x
-
-# Create the runner directory
-mkdir -p github-runner && cd github-runner
-
-# Download and extract the official package
+mkdir -p /opt/github-runner-base/bin
+cd /opt/github-runner-base/bin
 curl -o actions-runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.316.1/actions-runner-linux-x64-2.316.1.tar.gz
 tar xzf ./actions-runner.tar.gz
 ```
 
 ---
 
-## Step 2: Configure Repository Token & Target Work Directory
-Run the configuration script. Use the `--work` flag to direct the checked-out code straight to the domain's web deployment folder (e.g., `/var/www/domain-x/public_html`):
+## 3. Registering a New Project
+To set up a new project (e.g., Project A targeting `/var/www/domain-x/`):
 
-```bash
-./config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_GITHUB_TOKEN --work ../public_html
-```
+1. **Create the config folder:**
+   ```bash
+   mkdir -p /opt/github-runner-base/project-a && cd /opt/github-runner-base/project-a
+   ```
+
+2. **Configure the keys and point the output space to the domain directory:**
+   ```bash
+   ../bin/config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_TOKEN --work /var/www/domain-x/
+   ```
 
 ---
 
-## Step 3: Run & Stop Commands
+## 4. Run & Stop Commands
 
-To control the runner, execute the commands from inside the domain's runner directory:
+Execute the commands from inside the project's key folder:
 
 ### To Start the Runner (Background):
 ```bash
-cd /var/www/domain-x/github-runner
-nohup ./run.sh &
+cd /opt/github-runner-base/project-a
+nohup ../bin/run.sh &
 ```
 
 ### To Stop the Runner:
 ```bash
-pkill -f "domain-x/github-runner"
+pkill -f "project-a"
 ```
-*(Repeat the steps for any other domain like `/var/www/domain-y/` to create a fully isolated environment.)*
+
+---
+
+## 5. How Full-Stack Projects Deploy (React / Node / PostgreSQL)
+
+Because the runner checks the code out directly into `/var/www/domain-x/`, your GitHub workflow file (`deploy.yml`) simply commands Docker to rebuild and run the containers inside that folder:
+
+```yaml
+# Example workflow deployment steps (.github/workflows/deploy.yml)
+steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v4
+
+  - name: Deploy application via Docker Compose
+    run: |
+      docker compose down
+      docker compose up --build -d
+```
+Docker Compose manages the React frontend, Node backend, and PostgreSQL database locally inside the domain's network boundary, mapped to the correct port.
