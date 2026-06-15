@@ -1,62 +1,47 @@
-# RHEL GitHub Actions Runner Setup Guide
+# Domain-Isolated GitHub Actions Runner Setup Guide
 
-Use one of the two options below to run isolated runners for multiple projects under a non-root user (e.g., `nitt-user`).
+This guide describes how to configure independent, self-contained GitHub Actions runners inside individual domain spaces (e.g., `/var/www/domain-x/`). This allows files to deploy directly to the correct domain space while keeping setups isolated.
 
 ---
 
-## Shared Initialization (Run Once)
-Download and extract the runner software in a single shared directory:
+## Step 1: Download & Extract Runner (Do inside the Domain Folder)
+The server admin navigates to the domain's allocated space, creates a runner directory, and extracts the runner software:
+
 ```bash
-mkdir -p ~/github-runner && cd ~/github-runner
+# Go to the domain space
+cd /var/www/domain-x
+
+# Create the runner directory
+mkdir -p github-runner && cd github-runner
+
+# Download and extract the official package
 curl -o actions-runner.tar.gz -L https://github.com/actions/runner/releases/download/v2.316.1/actions-runner-linux-x64-2.316.1.tar.gz
 tar xzf ./actions-runner.tar.gz
 ```
 
-Create folders to hold config keys for each project (e.g., Project A and Project B):
+---
+
+## Step 2: Configure Repository Token & Target Work Directory
+Run the configuration script. Use the `--work` flag to direct the checked-out code straight to the domain's web deployment folder (e.g., `/var/www/domain-x/public_html`):
+
 ```bash
-mkdir -p ~/github-runner/project-a
-mkdir -p ~/github-runner/project-b
+./config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_GITHUB_TOKEN --work ../public_html
 ```
 
 ---
 
-## Option A: The System Service Way (Requires Sudo/Admin Access)
-*Best for production. Automatically starts when the server reboots.*
+## Step 3: Run & Stop Commands
 
-### 1. First-Time Setup
-Link the repository and install the service:
+To control the runner, execute the commands from inside the domain's runner directory:
+
+### To Start the Runner (Background):
 ```bash
-cd ~/github-runner/project-a
-../config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_TOKEN
-sudo ./svc.sh install
+cd /var/www/domain-x/github-runner
+nohup ./run.sh &
 ```
 
-### 2. Everyday Control Commands
+### To Stop the Runner:
 ```bash
-# Start the runner
-sudo ./svc.sh start
-
-# Stop the runner
-sudo ./svc.sh stop
+pkill -f "domain-x/github-runner"
 ```
-
----
-
-## Option B: The Background Way (No Sudo/Admin Access Required)
-*Use if you do not have admin permissions on the server.*
-
-### 1. First-Time Setup
-Link the repository:
-```bash
-cd ~/github-runner/project-a
-../config.sh --url https://github.com/Kv-Logics/geofence-engine --token YOUR_TOKEN
-```
-
-### 2. Everyday Control Commands
-```bash
-# Start the runner in the background
-nohup ../run.sh &
-
-# Stop the runner
-pkill -f "project-a"
-```
+*(Repeat the steps for any other domain like `/var/www/domain-y/` to create a fully isolated environment.)*
