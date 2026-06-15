@@ -49,6 +49,7 @@ cd /var/www/domain-x/github-runner
 ```
 
 #### 2. Turn ON (Start Deployment):
+*Establishes a connection from GitHub to domain-x and pulls code.*
 ```bash
 cd /var/www/domain-x/github-runner
 nohup /opt/github-runner-base/bin/run.sh &
